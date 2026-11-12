@@ -21,6 +21,18 @@ final class ConfigImportServiceTests: XCTestCase {
             #"{"proxies":[]}"#,
             #"{"proxy-groups":[{"name":"Proxy","type":"select","proxies":["DIRECT"]}]}"#,
             #"{"proxy-providers":{"example":{"type":"file","path":"./proxies.yaml"}}}"#,
+            """
+            {
+              "mode": "rule",
+              "proxies": [{"name": "Example #1", "type": "hysteria2", "server": "example.com",
+                           "port": 443, "password": "#example"}]
+            }
+            # synthetic-subscription-marker
+            """,
+            "# header\r\n{\"proxies\":[]}\r\n  # footer\r\n",
+            "# header\r{\"proxies\":[]}\r# footer\r",
+            "{\"proxies\":[],\"description\":\"first\u{2028}#second\u{2029}#third\u{0085}#last\"}\n# footer",
+            #"{"proxies":[],"description":"first line\n#still inside the string"}"#,
             "mode: rule\nproxies: []\n",
             "proxy-groups: []\n",
             "proxy-providers: {}\n",
@@ -44,6 +56,9 @@ final class ConfigImportServiceTests: XCTestCase {
             #"{"data":{"proxies":[]}}"#,
             #"[{"proxies":[]}]"#,
             #"{"proxies":null,"proxy-groups":{},"proxy-providers":[]}"#,
+            "# comment only\n",
+            "{\"proxies\":[]}\n# comment\nunexpected trailing content",
+            "{\"proxies\":[]\n# missing closing brace",
         ]
 
         for config in invalidConfigs {

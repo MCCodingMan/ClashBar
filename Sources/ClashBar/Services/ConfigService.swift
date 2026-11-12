@@ -225,8 +225,12 @@ struct ConfigImportService {
             return true
         }
 
-        // Preserve the existing YAML check and additionally accept JSON subscriptions.
-        guard let config = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] else {
+        // JSON-style YAML subscriptions may include full-line YAML comments.
+        // Ignore those only for validation; writeConfigData still saves the original bytes.
+        let jsonText = text.components(separatedBy: CharacterSet(charactersIn: "\r\n"))
+            .filter { !$0.trimmingCharacters(in: .whitespaces).hasPrefix("#") }
+            .joined(separator: "\n")
+        guard let config = (try? JSONSerialization.jsonObject(with: Data(jsonText.utf8))) as? [String: Any] else {
             return false
         }
         return config["proxies"] is [Any]
