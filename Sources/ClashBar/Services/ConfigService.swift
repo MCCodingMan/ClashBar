@@ -221,7 +221,17 @@ struct ConfigImportService {
         let hasProxyGroups = text.contains("proxy-groups:")
         let hasProxyProviders = text.contains("proxy-providers:")
 
-        return hasProxies || hasProxyGroups || hasProxyProviders
+        if hasProxies || hasProxyGroups || hasProxyProviders {
+            return true
+        }
+
+        // Preserve the existing YAML check and additionally accept JSON subscriptions.
+        guard let config = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] else {
+            return false
+        }
+        return config["proxies"] is [Any]
+            || config["proxy-groups"] is [Any]
+            || config["proxy-providers"] is [String: Any]
     }
 
     func normalizedConfigFileName(_ fileName: String, fallback: String? = nil) -> String? {
